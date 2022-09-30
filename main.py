@@ -1,4 +1,5 @@
 import PySimpleGUI as sg
+import math
 layout = [
     [sg.Text('File 1'), sg.InputText(), sg.FileBrowse(),
      sg.Checkbox('MD5'), sg.Checkbox('SHA1')
