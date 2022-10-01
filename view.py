@@ -9,6 +9,9 @@ frame_elements = [
     [sg.Text('    Чайник', background_color="#F0E68C", font=elements_font),
      sg.Slider(range=(0, 1), default_value=0, size=(6, 15), orientation='h', font=slider_font,
                tooltip='Изменить состояние устройства', disable_number_display=True)],
+    [sg.Text('    Утюг', background_color="#F0E68C", font=elements_font),
+     sg.Slider(range=(0, 1), default_value=0, size=(6, 15), orientation='h', font=slider_font,
+               tooltip='Изменить состояние устройства', disable_number_display=True)],
     [sg.Text('    Робот-пылесос', background_color="#F0E68C", font=elements_font),
      sg.Slider(range=(0, 1), default_value=0, size=(6, 15), orientation='h', font=slider_font,
                tooltip='Изменить состояние устройства', disable_number_display=True)]
