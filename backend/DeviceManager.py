@@ -2,15 +2,16 @@ import Device
 import Sensor
 
 
-class DeviceManager():
+class DeviceManager:
     def __init__(self):
-        pass
+        self.devices_list = list()
+        self.sensors_list = list()
 
-    def change_device_status(self):
+    def change_device_status(self, new_status):
         pass
 
     def get_device_list(self):
-        pass
+        return self.devices_list
 
     def load(self):
         pass
