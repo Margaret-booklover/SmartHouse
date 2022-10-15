@@ -1,0 +1,4 @@
+username;password;device_file;sensor_file
+irinka;5432;first.csv;senfirst.csv
+viktor;hello;second.csv;sensecond.csv
+margo;petrova;third.csv;senthird.csv
