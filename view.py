@@ -32,19 +32,22 @@ def create_device_elements(device):
     for i in range(len(device)):
         on = "Off"
         colorB = '#CD5C5C'
+        vis = False
         if device["status"][i]:
             on = "On"
             colorB = '#6B8E23'
+            vis = True
         devices.append([sg.Text(device["device"][i], background_color="#F0E68C", font=elements_font),
                         sg.Text(device['param_name'][i] + ":", background_color="#F0E68C", font=elements_font),
                         sg.Text(device['param_value'][i], background_color="#F0E68C", font=elements_font,
                                 key="P" + device['ID'][i]),
-                        sg.Button(button_text="Изменить",
-                                  font=slider_font,
-                                  tooltip='Изменить состояние устройства', key=device['ID'][i]),
                         sg.Button(button_text=on,
                                   font=slider_font, key=device["device"][i],
-                                  button_color=colorB)])
+                                  button_color=colorB),
+                        sg.Button(button_text="Изменить",
+                                  font=slider_font,
+                                  tooltip='Изменить состояние устройства', key=device['ID'][i], visible=vis)
+                        ])
     return devices
 
 
@@ -134,11 +137,14 @@ def devices(window_dev, window_sensors, device, sensor, sensor_file):
                         input_text = 'Off'
                         device['status'][i] = 0
                         colorB = '#CD5C5C'
+                        vis = False
                     else:
                         input_text = 'On'
                         device['status'][i] = 1
                         colorB = '#6B8E23'
+                        vis = True
                     window_dev[device['device'][i]].update(input_text, colorB)
+                    window_dev[device['ID'][i]].update(visible=vis)
                 if event == device['ID'][i]:
                     key = "P" + device['ID'][i]
                     window_dev.keep_on_top_clear()
