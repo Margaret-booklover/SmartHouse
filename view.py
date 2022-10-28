@@ -104,14 +104,18 @@ def Sensors(window_sensors, name_file):
             window_sensors.keep_on_top_clear()
             return 1
         if event == "Обновить":
-            new_sensor = read_data(name_file)
-            colorP = '#F0E68C'
+            if sensor is None:
+                new_sensor = read_data(name_file)
+            else:
+                new_sensor = sensor
             for i in range(len(new_sensor)):
-                if new_sensor['param_value'][i] != sensor['param_value'][i]:
-                    if (new_sensor['param_value'][i] > new_sensor['max_value'][i]) or (
-                            new_sensor['param_value'][i] < new_sensor['min_value'][i]):
-                        colorP = '#CD5C5C'
-                    window_sensors[sensor['ID'][i]].update(new_sensor['param_value'][i], colorP)
+                if (new_sensor['param_value'][i] > new_sensor['max_value'][i]) or (
+                        new_sensor['param_value'][i] < new_sensor['min_value'][i]):
+                    print(new_sensor['sensor'][i])
+                    colorP = '#CD5C5C'
+                else:
+                    colorP = '#F0E68C'
+                window_sensors[sensor['ID'][i]].update(new_sensor['param_value'][i], colorP)
         if event == 'Выйти' or event == sg.WINDOW_CLOSED:
             window_sensors.alpha_channel = 0
             return 0
@@ -129,9 +133,13 @@ def devices(window_dev, window_sensors, device: pandas.DataFrame, sensor, sensor
         def em_func(x: float):
             return np.cbrt(x - 1) / 2 + 0.5
         for i in np.linspace(0, 2, how_many_itter):
-            device['param_value'][num] = int(start + em_func(i) * (end - start))  # change state
+            sensor['param_value'][0] = int(start + em_func(i) * (end - start))
+            #device['param_value'][num] = int(start + em_func(i) * (end - start))  # change state
+            device['param_value'][num] = end
             time.sleep(0.1)
             window_dev[key].update(int(device['param_value'][num]))
+            # colorP = '#CD5C5C'
+            #window_sensors[sensor['ID'][0]].update(sensor['param_value'][0], colorP)
 
     k = 1
     n = 0
@@ -259,7 +267,9 @@ while True:
                 if users['password'][i] == values['password']:
                     device = pandas.DataFrame()
                     device = read_data(users['device_file'][i])
-                    sensor = read_data(users['sensor_file'][i])
+                    global sensor
+                    sensor = None
+                    sensor= read_data(users['sensor_file'][i])
                     device_elements = create_device_elements(device)
                     sensor_elements = create_sensor_elements(sensor)
                     Dev = create_device_window(device_elements)
