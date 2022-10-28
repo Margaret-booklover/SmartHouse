@@ -1,6 +1,11 @@
-import PySimpleGUI as sg
-import pandas
+import math
+import threading
+import time
 
+import PySimpleGUI as sg
+import numpy as np
+import pandas
+import backend.emulation as emul
 
 def params(minE, maxE, step):
     res = []
@@ -19,7 +24,7 @@ def popup_select(the_list):
     event, values = window.read()
     window.close()
     del window
-    return values['_LIST_']
+    return int(values['_LIST_'])
 
 
 def read_data(name_file):
@@ -112,7 +117,22 @@ def Sensors(window_sensors, name_file):
             return 0
 
 
-def devices(window_dev, window_sensors, device, sensor, sensor_file):
+def devices(window_dev, window_sensors, device: pandas.DataFrame, sensor, sensor_file):
+    def emul_func_device(start: int, end: int, how_many_itter: int, num: int, key: str):
+        """
+        Эмуляция постепенного изменения значения температуры device
+        :param start:
+        :param end:
+        :param how_many_itter:
+        :return:
+        """
+        def em_func(x: float):
+            return np.cbrt(x - 1) / 2 + 0.5
+        for i in np.linspace(0, 2, how_many_itter):
+            device['param_value'][num] = int(start + em_func(i) * (end - start))  # change state
+            time.sleep(0.1)
+            window_dev[key].update(int(device['param_value'][num]))
+
     k = 1
     n = 0
     window_dev.keep_on_top_set()
@@ -149,11 +169,16 @@ def devices(window_dev, window_sensors, device, sensor, sensor_file):
                     key = "P" + device['ID'][i]
                     window_dev.keep_on_top_clear()
                     param = params(device['min_value'][i], device['max_value'][i], device['step'][i])
-                    nbr = popup_select(param)
+                    end_value = popup_select(param)
                     window_dev.keep_on_top_set()
-                    if nbr != '':
-                        window_dev[key].update(nbr)
-                        device['param_value'][i] = nbr
+                    if end_value != '':
+                        # --------------------------------------
+                        # print('key = {}, i = {}, start={}'.format(key, i, device['param_value'][i]))
+                        start_value = int(device['param_value'][i])
+                        change_thread = threading.Thread(target=emul_func_device, args=(
+                            start_value, end_value, 80 + 6*abs(end_value - start_value), int(i), key)
+                        )
+                        change_thread.start()
         else:
             window_dev.alpha_channel = 0
             return device
@@ -232,6 +257,7 @@ while True:
         for i in range(len(users)):
             if users['username'][i] == values['user_name']:
                 if users['password'][i] == values['password']:
+                    device = pandas.DataFrame()
                     device = read_data(users['device_file'][i])
                     sensor = read_data(users['sensor_file'][i])
                     device_elements = create_device_elements(device)
