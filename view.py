@@ -181,7 +181,7 @@ def warning_incorrect_login():
 
 
 def warning_incorrect_password():
-    layout = [[sg.Text("Некорректный пароль. Пожалуйста, повторите опытку", font=elements_font)], [sg.OK()]]
+    layout = [[sg.Text("Неверный пароль. Пожалуйста, повторите опытку", font=elements_font)], [sg.OK()]]
     window = sg.Window('Ошибка', layout=layout)
     event, values = window.read()
     window.close()
