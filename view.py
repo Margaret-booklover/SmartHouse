@@ -7,6 +7,8 @@ import numpy as np
 import pandas
 import backend.emulation as emul
 
+kill_thread = False
+
 def params(minE, maxE, step):
     res = []
     c = 0
@@ -130,19 +132,31 @@ def devices(window_dev, window_sensors, device: pandas.DataFrame, sensor, sensor
         :param how_many_itter:
         :return:
         """
+        start = sensor['param_value'][0]
+        global kill_thread
         def em_func(x: float):
             return np.cbrt(x - 1) / 2 + 0.5
+
         for i in np.linspace(0, 2, how_many_itter):
             sensor['param_value'][0] = int(start + em_func(i) * (end - start))
+            while (device['status'][num] == 0):
+                if kill_thread:
+                    print('Thread is kill')
+                    return
+                else:
+                    time.sleep(0.1)
             #device['param_value'][num] = int(start + em_func(i) * (end - start))  # change state
             device['param_value'][num] = end
             time.sleep(0.1)
             window_dev[key].update(int(device['param_value'][num]))
             # colorP = '#CD5C5C'
             #window_sensors[sensor['ID'][0]].update(sensor['param_value'][0], colorP)
-
+            if kill_thread:
+                return
     k = 1
     n = 0
+    global kill_thread
+    threads = []
     window_dev.keep_on_top_set()
     window_dev.AlphaChannel = 1
     while k == 1:
@@ -182,10 +196,21 @@ def devices(window_dev, window_sensors, device: pandas.DataFrame, sensor, sensor
                     if end_value != '':
                         # --------------------------------------
                         # print('key = {}, i = {}, start={}'.format(key, i, device['param_value'][i]))
+                        # kill_thread = True
+                        # print(f'K-th = {kill_thread}')
+                        # time.sleep(1)
+                        # for t in threads:
+                        #     t.join()
+                        # threads = []
+                        # kill_thread = False
+
                         start_value = int(device['param_value'][i])
                         change_thread = threading.Thread(target=emul_func_device, args=(
                             start_value, end_value, 80 + 6*abs(end_value - start_value), int(i), key)
                         )
+                        threads.append(change_thread)
+
+
                         change_thread.start()
         else:
             window_dev.alpha_channel = 0
