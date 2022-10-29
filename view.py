@@ -199,8 +199,9 @@ def devices(window_dev, window_sensors, device: pandas.DataFrame, sensor, sensor
                         # kill_thread = True
                         # print(f'K-th = {kill_thread}')
                         # time.sleep(1)
-                        # for t in threads:
-                        #     t.join()
+                        for t in threads:
+                            # kill_thread=
+                            t.join()
                         # threads = []
                         # kill_thread = False
 
