@@ -1,3 +1,0 @@
-device,param_name,min_value,param_value,max_value,ID,status,step
-Кондиционер,Температура,18,10,30,F123,1,1
-Вентилятор,Скорость,1,4,5,V2411,1,1
