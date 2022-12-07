@@ -6,9 +6,8 @@ import PySimpleGUI as sg
 import numpy as np
 import pandas
 
-kill_thread = False
-
-
+kill_thread = True
+temper_device = {'Кондиционер', 'Вентилятор', 'Обогреватель', 'Электрический камин'}
 def params(minE, maxE, step):
     res = []
     c = 0
@@ -190,38 +189,47 @@ def devices(window_dev, window_sensors, device: pandas.DataFrame, sensor, sensor
         :param how_many_itter:
         :return:
         """
-        start = sensor['param_value'][0]
         global kill_thread
-
         def em_func(x: float):
             return np.cbrt(x - 1) / 2 + 0.5
 
+        temp_sens = {'Термометр'}
+        temp_ID = list();
+        for i in range(len(sensor)):
+            if sensor['sensor'][i] in temp_sens:
+                temp_ID.append(sensor['ID'][i])
+        if len(temp_ID) > 0:
+            start = sensor['param_value'][temp_ID[0]]
+        else:
+            start = 20
+        kill_thread = False
         for i in np.linspace(0, 2, how_many_itter):
-            sensor['param_value'][0] = int(start + em_func(i) * (end - start))
-            while (device['status'][num] == 0):
+            for j in temp_ID:
+                sensor['param_value'][j] = int(start + em_func(i) * (end - start))
+                while (device['status'][num] == 0):
+                    if kill_thread:
+                        print('Thread is kill')
+                        return
+                    else:
+                        time.sleep(0.1)
+                device['param_value'][num] = end
+                time.sleep(0.1)
+                colorP = 0
+                window_dev[key].update(int(device['param_value'][num]))
+                if (sensor['param_value'][j] > sensor['max_value'][j]) or \
+                        (sensor['param_value'][j] < sensor['min_value'][j]):
+                    # print(new_sensor['sensor'][i])
+                    colorP = '#CD5C5C'
+                else:
+                    colorP = '#F0E68C'
+                window_sensors[sensor['ID'][j]].update(sensor['param_value'][j], colorP)
                 if kill_thread:
                     print('Thread is kill')
                     return
-                else:
-                    time.sleep(0.1)
-            # device['param_value'][num] = int(start + em_func(i) * (end - start))  # change state
-            device['param_value'][num] = end
-            time.sleep(0.1)
-            colorP = 0
-            window_dev[key].update(int(device['param_value'][num]))
-            if (sensor['param_value'][0] > sensor['max_value'][0]) or \
-                    (sensor['param_value'][0] < sensor['min_value'][0]):
-                # print(new_sensor['sensor'][i])
-                colorP = '#CD5C5C'
-            else:
-                colorP = '#F0E68C'
-            window_sensors[sensor['ID'][0]].update(sensor['param_value'][0], colorP)
-            if kill_thread:
-                return
 
+    global kill_thread
     k = 1
     n = 0
-    global kill_thread
     threads = []
     window_dev.keep_on_top_set()
     window_dev.AlphaChannel = 1
@@ -264,26 +272,19 @@ def devices(window_dev, window_sensors, device: pandas.DataFrame, sensor, sensor
                                    device['step'][i])
                     end_value = popup_select(param)
                     window_dev.keep_on_top_set()
-                    if end_value != '':
-                        # --------------------------------------
-                        # print('key = {}, i = {}, start={}'.format(key, i, device['param_value'][i]))
-                        # kill_thread = True
-                        # print(f'K-th = {kill_thread}')
-                        # time.sleep(1)
-                        for t in threads:
-                            # kill_thread=
-                            t.join()
-                        # threads = []
-                        # kill_thread = False
-
+                    device['param_value'][i] = end_value
+                    window_dev[key].update(int(device['param_value'][i]))
+                    if end_value != '' and device['device'][i] in temper_device:
                         start_value = int(device['param_value'][i])
+                        kill_thread = True;
+                        time.sleep(0.8);
                         change_thread = threading.Thread(target=emul_func_device,
                                                          args=(start_value,
                                                                end_value, 80 + 6 * abs(end_value - start_value),
-                                                               int(i), key)
+                                                               int(i), key),
+                                                         daemon=True
                                                          )
                         threads.append(change_thread)
-
                         change_thread.start()
         else:
             window_dev.alpha_channel = 0
